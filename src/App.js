@@ -4,6 +4,7 @@ import axios from "axios";
 import MainListComponent from "./component/MainListComponent/MainListComponent";
 import Navbar from "./component/Navbar/Navbar";
 import "./App.css";
+import FooterComponent from "./component/FooterComponent/FooterComponent";
 
 const App = () => {
   // Initialize the dexie for storing the data.
@@ -114,6 +115,7 @@ const App = () => {
         handleIncrement={handleIncrement}
         quantity={quantity}
       />
+      <FooterComponent />
     </div>
   );
 };
