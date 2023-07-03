@@ -8,10 +8,16 @@ import {
   TableRow,
   tableCellClasses,
   styled,
+  Button,
 } from "@mui/material";
 import React from "react";
 
-const ProductList = ({ selectedProducts }) => {
+const ProductList = ({
+  selectedProducts,
+  handleDecrement,
+  handleIncrement,
+  quantity,
+}) => {
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
       backgroundColor: theme.palette.common.black,
@@ -32,10 +38,10 @@ const ProductList = ({ selectedProducts }) => {
     },
   }));
 
-if (selectedProducts.length <=0) {
-    return null
-}
-  
+  if (selectedProducts.length <= 0) {
+    return null;
+  }
+
   return (
     <TableContainer component={Paper}>
       <Table sx={{ minWidth: 700 }} aria-label="customized table">
@@ -51,11 +57,29 @@ if (selectedProducts.length <=0) {
           {selectedProducts.map((row, index) => (
             <StyledTableRow key={row.id}>
               <StyledTableCell component="th" scope="row">
-                {index +1}
+                {index + 1}
               </StyledTableCell>
               <StyledTableCell align="center">{row.title}</StyledTableCell>
               <StyledTableCell align="center">{row.price}</StyledTableCell>
-              <StyledTableCell align="center">+</StyledTableCell>
+              <StyledTableCell align="center">
+                <div className="items-center">
+                  <Button
+                    size="small"
+                    sx={{ fontSize: 20 }}
+                    onClick={() => handleDecrement(row)}
+                  >
+                    -
+                  </Button>
+                  <span className="">{quantity}</span>
+                  <Button
+                    size="small"
+                    sx={{ fontSize: 20 }}
+                    onClick={() => handleIncrement(row)}
+                  >
+                    +
+                  </Button>
+                </div>
+              </StyledTableCell>
             </StyledTableRow>
           ))}
         </TableBody>
