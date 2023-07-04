@@ -36,11 +36,13 @@ const App = () => {
       const newProducts = response.data.products.filter(
         (product) => !existingProductIds.includes(product.id)
       );
-
       await db.products.bulkAdd(newProducts);
       setSearchResults(response.data.products);
     } catch (error) {
       console.log("Error adding products:", error);
+      db.products.toArray().then((products) => {
+        setSearchResults(products);
+      });
     }
   };
 
@@ -115,7 +117,7 @@ const App = () => {
         handleIncrement={handleIncrement}
         quantity={quantity}
       />
-      <FooterComponent />
+      {Object.keys(selectedProducts).length > 0 && <FooterComponent />}
     </div>
   );
 };
