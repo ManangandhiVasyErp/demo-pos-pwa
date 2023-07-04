@@ -1,17 +1,37 @@
 const CACHE_NAME = "POS-Demo";
-const urlsToCache = ["index.html", "/", "/static/js/bundle.js",];
+const urlsToCache = [
+  "index.html",
+  "/",
+  "/static/js/bundle.js"
+];
 
 const self = this;
 
 // Install SW
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
+    caches.open(CACHE_NAME).then(async (cache) => {
+
+      let addedCache;
       console.log("Opened cache");
 
-      return cache.addAll(urlsToCache);
+      try {
+        addedCache = await cache.addAll(urlsToCache);
+      } catch (err) {
+        console.error('sw: cache.addAll');
+        for (let i of urlsToCache) {
+          try {
+            addedCache = await cache.add(i);
+          } catch (err) {
+            console.warn('sw: cache.add',i);
+          }
+        }
+      }
+  
+      return addedCache;
     })
   );
+  console.log("service worker added")
 });
 
 // // Listen for requests
@@ -47,18 +67,19 @@ self.addEventListener("fetch", (event) => {
       return cache.match(event.request).then((response) => {
         return (
           response ||
-          fetch(event.request).then((networkResponse) => {
-            cache.put(event.request, networkResponse.clone());
-            return networkResponse;
-          }).catch(() => {
-            return cache.match(event.request);
-          })
+          fetch(event.request)
+            .then((networkResponse) => {
+              cache.put(event.request, networkResponse.clone());
+              return networkResponse;
+            })
+            .catch(() => {
+              return cache.match(event.request);
+            })
         );
       });
     })
   );
 });
-
 
 // Activate the SW
 self.addEventListener("activate", (event) => {
