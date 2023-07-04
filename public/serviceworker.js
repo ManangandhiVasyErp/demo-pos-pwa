@@ -23,23 +23,42 @@ self.addEventListener("install", (event) => {
 //   );
 // });
 
+// self.addEventListener("fetch", (event) => {
+//     event.respondWith(
+//       caches.open(CACHE_NAME)
+//         .then((cache) => {
+//           return fetch(event.request)
+//             .then((response) => {
+//               // Update the cache with the new response
+//               cache.put(response.clone());
+//               return response;
+//             })
+//             .catch(() => {
+//               // If the network request fails, serve the cached resource
+//               return cache.match(event.request);
+//             });
+//         })
+//     );
+//   });
+
 self.addEventListener("fetch", (event) => {
-    event.respondWith(
-      caches.open(CACHE_NAME)
-        .then((cache) => {
-          return fetch(event.request)
-            .then((response) => {
-              // Update the cache with the new response
-              cache.put(response.clone());
-              return response;
-            })
-            .catch(() => {
-              // If the network request fails, serve the cached resource
-              return cache.match(event.request);
-            });
-        })
-    );
-  });
+  event.respondWith(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(event.request).then((response) => {
+        return (
+          response ||
+          fetch(event.request).then((networkResponse) => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          }).catch(() => {
+            return cache.match(event.request);
+          })
+        );
+      });
+    })
+  );
+});
+
 
 // Activate the SW
 self.addEventListener("activate", (event) => {
