@@ -10,7 +10,6 @@ import {
   styled,
   Button,
 } from "@mui/material";
-import React from "react";
 
 const ProductList = ({
   selectedProducts,
@@ -63,21 +62,25 @@ const ProductList = ({
               <StyledTableCell align="center">{row.price}</StyledTableCell>
               <StyledTableCell align="center">
                 <div className="items-center">
-                  <Button
-                    size="small"
-                    sx={{ fontSize: 20 }}
-                    onClick={() => handleDecrement(row)}
-                  >
-                    -
-                  </Button>
-                  <span className="">{quantity}</span>
-                  <Button
-                    size="small"
-                    sx={{ fontSize: 20 }}
-                    onClick={() => handleIncrement(row)}
-                  >
-                    +
-                  </Button>
+                  <>
+                    <Button
+                      size="small"
+                      sx={{ fontSize: 20 }}
+                      onClick={() => handleDecrement(row)}
+                    >
+                      -
+                    </Button>
+                    <span className="">
+                      {quantity && quantity[row.id] ? quantity[row.id] : 1}
+                    </span>
+                    <Button
+                      size="small"
+                      sx={{ fontSize: 20 }}
+                      onClick={() => handleIncrement(row)}
+                    >
+                      +
+                    </Button>
+                  </>
                 </div>
               </StyledTableCell>
             </StyledTableRow>
