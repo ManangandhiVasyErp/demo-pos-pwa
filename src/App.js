@@ -2,9 +2,11 @@ import Dexie from "dexie";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import MainListComponent from "./component/MainListComponent/MainListComponent";
-import Navbar from "./component/Navbar/Navbar";
 import "./App.css";
 import FooterComponent from "./component/FooterComponent/FooterComponent";
+import { Button } from "@mui/material";
+import SearchAutoComplete from "./component/SearchAutoComplete/SearchAutoComplete";
+import OrderListPage from "./component/OrderListPage/OrderListPage";
 
 const App = () => {
   // Initialize the dexie for storing the data.
@@ -30,6 +32,8 @@ const App = () => {
 
   // Total Amount for cart Items.
   const [totalAmount, setTotalAmount] = useState(0);
+
+  const [showOrdersBtn, setShowOrdersBtn] = useState(false);
 
   // Search Products API call in useEffect.
   const searchProducts = async () => {
@@ -144,19 +148,6 @@ const App = () => {
 
   // ............
 
-  // const cartItems = [...selectedProducts];
-
-  // const orderItems = cartItems.map((item) => ({
-  //   id: item.id,
-  // price: item.price,
-  // quantity: item.quantity,
-  // Subtotal: item.price * item.quantity
-  // }))
-
-  // const requestData = [{totalPrice: 1000, OrderItems: orderItems}]
-
-  // console.log("data", requestData);
-
   // UseEffect for Total Amount - cart Items.
   useEffect(() => {
     const cartItems = [...selectedProducts];
@@ -175,20 +166,48 @@ const App = () => {
 
   return (
     <div className="App">
-      <Navbar
-        searchResults={searchResults}
-        handleAutoCompleteChange={handleAutoCompleteChange}
-      />
-      <MainListComponent
-        selectedProducts={selectedProducts}
-        setSelectedProducts={setSelectedProducts}
-        handleDecrement={handleDecrement}
-        handleIncrement={handleIncrement}
-        quantity={quantity}
-      />
+      <div className="bg-slate-900 h-18 p-2 flex justify-between">
+        {!showOrdersBtn ? (
+          <SearchAutoComplete
+            searchResults={searchResults}
+            handleAutoCompleteChange={handleAutoCompleteChange}
+          />
+        ) : (
+          <h1 className="text-slate-300 text-2xl">Order List</h1>
+        )}
+        {showOrdersBtn ? (
+          <Button
+            color="secondary"
+            onClick={() => setShowOrdersBtn(!showOrdersBtn)}
+          >
+            Back To Home
+          </Button>
+        ) : (
+          <Button
+            onClick={() => setShowOrdersBtn(!showOrdersBtn)}
+            color="primary"
+          >
+            Orders
+          </Button>
+        )}
+      </div>
+      {showOrdersBtn ? (
+        <OrderListPage />
+      ) : (
+        <>
+          <MainListComponent
+            selectedProducts={selectedProducts}
+            setSelectedProducts={setSelectedProducts}
+            handleDecrement={handleDecrement}
+            handleIncrement={handleIncrement}
+            quantity={quantity}
+          />
 
-
-      {Object.keys(selectedProducts).length > 0 && <FooterComponent totalAmount={totalAmount}/>}
+          {Object.keys(selectedProducts).length > 0 && (
+            <FooterComponent totalAmount={totalAmount} />
+          )}
+        </>
+      )}
     </div>
   );
 };
