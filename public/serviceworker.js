@@ -2,7 +2,12 @@ const CACHE_NAME = "POS-Demo";
 const urlsToCache = [
   "index.html",
   "/",
-  "/static/js/bundle.js"
+  "/static/js/bundle.js",
+  "/static/css/main.b1aff12a.css",
+  "/static/js/main.d599a805.js",
+  "/static/js/main.126086b7.js",
+  "/favicon.ico",
+  "/manifest.json"
 ];
 
 const self = this;

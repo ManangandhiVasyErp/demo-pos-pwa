@@ -28,6 +28,9 @@ const App = () => {
   // 3. Logic for quantity...
   const [quantity, setQuantity] = useState(undefined);
 
+  // Total Amount for cart Items.
+  const [totalAmount, setTotalAmount] = useState(0);
+
   // Search Products API call in useEffect.
   const searchProducts = async () => {
     try {
@@ -45,7 +48,6 @@ const App = () => {
       );
       setSearchResults(filteredResults);
     } catch (error) {
-      console.log("Error adding products:", error);
       db.products.toArray().then((products) => {
         const filteredOfflineData = products.filter(
           (product) =>
@@ -68,11 +70,13 @@ const App = () => {
   const handleAutoCompleteChange = (e, value) => {
     e.preventDefault();
     if (value) {
-      cartDB.products.add({ ...value, quantity });
-      setSelectedProducts((prev) => [...prev, value]);
+      const newProduct = { ...value, quantity: 1 }; // Set the initial quantity to 1
+      cartDB.products.add(newProduct);
+      setSelectedProducts((prev) => [...prev, newProduct]);
     }
   };
 
+  // Update Item Quantity...
   const updateProductQuantity = (productId, newQuantity) => {
     cartDB.products.update(productId, { quantity: newQuantity });
   };
@@ -81,6 +85,8 @@ const App = () => {
     cartDB.products.delete(productId);
   };
 
+  // ......
+
   // Quantity updation logic
   const handleDecrement = (row) => {
     if (quantity[row.id] > 1) {
@@ -88,6 +94,15 @@ const App = () => {
         ...prev,
         [row.id]: prev[row.id] - 1,
       }));
+
+      setSelectedProducts((prev) =>
+        prev.map((product) =>
+          product.id === row.id
+            ? { ...product, quantity: quantity[row.id] - 1 }
+            : product
+        )
+      );
+
       updateProductQuantity(row.id, quantity[row.id] - 1);
     } else {
       setSelectedProducts((prev) => prev.filter((prod) => prod.id !== row.id));
@@ -98,10 +113,20 @@ const App = () => {
   const handleIncrement = (row) => {
     const updatedQuantity =
       quantity && quantity[row.id] ? quantity[row.id] + 1 : 1;
+
     setQuantity((prev) => ({
       ...prev,
       [row.id]: updatedQuantity,
     }));
+
+    setSelectedProducts((prev) =>
+      prev.map((product) =>
+        product.id === row.id
+          ? { ...product, quantity: updatedQuantity }
+          : product
+      )
+    );
+
     updateProductQuantity(row.id, updatedQuantity);
   };
 
@@ -117,6 +142,37 @@ const App = () => {
     // eslint-disable-next-line
   }, []);
 
+  // ............
+
+  // const cartItems = [...selectedProducts];
+
+  // const orderItems = cartItems.map((item) => ({
+  //   id: item.id,
+  // price: item.price,
+  // quantity: item.quantity,
+  // Subtotal: item.price * item.quantity
+  // }))
+
+  // const requestData = [{totalPrice: 1000, OrderItems: orderItems}]
+
+  // console.log("data", requestData);
+
+  // UseEffect for Total Amount - cart Items.
+  useEffect(() => {
+    const cartItems = [...selectedProducts];
+
+    let totalPrice = 0;
+
+    for (let i = 0; i < cartItems.length; i++) {
+      let subTotalPrice = cartItems[i].quantity * cartItems[i].price;
+      totalPrice += subTotalPrice;
+    }
+
+    setTotalAmount(totalPrice);
+  }, [selectedProducts]);
+
+  // ..............
+
   return (
     <div className="App">
       <Navbar
@@ -130,7 +186,9 @@ const App = () => {
         handleIncrement={handleIncrement}
         quantity={quantity}
       />
-      {Object.keys(selectedProducts).length > 0 && <FooterComponent />}
+
+
+      {Object.keys(selectedProducts).length > 0 && <FooterComponent totalAmount={totalAmount}/>}
     </div>
   );
 };
