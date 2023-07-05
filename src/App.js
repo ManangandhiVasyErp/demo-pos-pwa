@@ -37,19 +37,32 @@ const App = () => {
         (product) => !existingProductIds.includes(product.id)
       );
       await db.products.bulkAdd(newProducts);
-      setSearchResults(response.data.products);
+      const filteredResults = response.data.products.filter(
+        (product) =>
+          !selectedProducts.find(
+            (selectedProduct) => selectedProduct.id === product.id
+          )
+      );
+      setSearchResults(filteredResults);
     } catch (error) {
       console.log("Error adding products:", error);
       db.products.toArray().then((products) => {
-        setSearchResults(products);
+        const filteredOfflineData = products.filter(
+          (product) =>
+            !selectedProducts.find(
+              (selectedProduct) => selectedProduct.id === product.id
+            )
+        );
+        setSearchResults(filteredOfflineData);
       });
     }
   };
 
+  // For online/offline sync search results...
   useEffect(() => {
     searchProducts();
     // eslint-disable-next-line
-  }, []);
+  }, [selectedProducts]);
 
   // autocomplete change event handler
   const handleAutoCompleteChange = (e, value) => {
