@@ -1,8 +1,6 @@
-import * as React from "react";
-import TextField from "@mui/material/TextField";
-import Autocomplete from "@mui/material/Autocomplete";
+import { Autocomplete, TextField } from "@mui/material";
 
-const SearchBox = ({ searchResults, handleAutoCompleteChange }) => {
+const SearchAutoComplete = ({ searchResults, handleAutoCompleteChange }) => {
   return (
     <Autocomplete
       id="product-search-item"
@@ -17,4 +15,4 @@ const SearchBox = ({ searchResults, handleAutoCompleteChange }) => {
   );
 };
 
-export default SearchBox;
+export default SearchAutoComplete;

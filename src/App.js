@@ -2,9 +2,11 @@ import Dexie from "dexie";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import MainListComponent from "./component/MainListComponent/MainListComponent";
-import Navbar from "./component/Navbar/Navbar";
 import "./App.css";
 import FooterComponent from "./component/FooterComponent/FooterComponent";
+import { Button } from "@mui/material";
+import SearchAutoComplete from "./component/SearchAutoComplete/SearchAutoComplete";
+import OrderListPage from "./component/OrderListPage/OrderListPage";
 
 const App = () => {
   // Initialize the dexie for storing the data.
@@ -28,6 +30,11 @@ const App = () => {
   // 3. Logic for quantity...
   const [quantity, setQuantity] = useState(undefined);
 
+  // Total Amount for cart Items.
+  const [totalAmount, setTotalAmount] = useState(0);
+
+  const [showOrdersBtn, setShowOrdersBtn] = useState(false);
+
   // Search Products API call in useEffect.
   const searchProducts = async () => {
     try {
@@ -37,29 +44,43 @@ const App = () => {
         (product) => !existingProductIds.includes(product.id)
       );
       await db.products.bulkAdd(newProducts);
-      setSearchResults(response.data.products);
+      const filteredResults = response.data.products.filter(
+        (product) =>
+          !selectedProducts.find(
+            (selectedProduct) => selectedProduct.id === product.id
+          )
+      );
+      setSearchResults(filteredResults);
     } catch (error) {
-      console.log("Error adding products:", error);
       db.products.toArray().then((products) => {
-        setSearchResults(products);
+        const filteredOfflineData = products.filter(
+          (product) =>
+            !selectedProducts.find(
+              (selectedProduct) => selectedProduct.id === product.id
+            )
+        );
+        setSearchResults(filteredOfflineData);
       });
     }
   };
 
+  // For online/offline sync search results...
   useEffect(() => {
     searchProducts();
     // eslint-disable-next-line
-  }, []);
+  }, [selectedProducts]);
 
   // autocomplete change event handler
   const handleAutoCompleteChange = (e, value) => {
     e.preventDefault();
     if (value) {
-      cartDB.products.add({ ...value, quantity });
-      setSelectedProducts((prev) => [...prev, value]);
+      const newProduct = { ...value, quantity: 1 }; // Set the initial quantity to 1
+      cartDB.products.add(newProduct);
+      setSelectedProducts((prev) => [...prev, newProduct]);
     }
   };
 
+  // Update Item Quantity...
   const updateProductQuantity = (productId, newQuantity) => {
     cartDB.products.update(productId, { quantity: newQuantity });
   };
@@ -68,6 +89,8 @@ const App = () => {
     cartDB.products.delete(productId);
   };
 
+  // ......
+
   // Quantity updation logic
   const handleDecrement = (row) => {
     if (quantity[row.id] > 1) {
@@ -75,6 +98,15 @@ const App = () => {
         ...prev,
         [row.id]: prev[row.id] - 1,
       }));
+
+      setSelectedProducts((prev) =>
+        prev.map((product) =>
+          product.id === row.id
+            ? { ...product, quantity: quantity[row.id] - 1 }
+            : product
+        )
+      );
+
       updateProductQuantity(row.id, quantity[row.id] - 1);
     } else {
       setSelectedProducts((prev) => prev.filter((prod) => prod.id !== row.id));
@@ -85,10 +117,20 @@ const App = () => {
   const handleIncrement = (row) => {
     const updatedQuantity =
       quantity && quantity[row.id] ? quantity[row.id] + 1 : 1;
+
     setQuantity((prev) => ({
       ...prev,
       [row.id]: updatedQuantity,
     }));
+
+    setSelectedProducts((prev) =>
+      prev.map((product) =>
+        product.id === row.id
+          ? { ...product, quantity: updatedQuantity }
+          : product
+      )
+    );
+
     updateProductQuantity(row.id, updatedQuantity);
   };
 
@@ -104,20 +146,68 @@ const App = () => {
     // eslint-disable-next-line
   }, []);
 
+  // ............
+
+  // UseEffect for Total Amount - cart Items.
+  useEffect(() => {
+    const cartItems = [...selectedProducts];
+
+    let totalPrice = 0;
+
+    for (let i = 0; i < cartItems.length; i++) {
+      let subTotalPrice = cartItems[i].quantity * cartItems[i].price;
+      totalPrice += subTotalPrice;
+    }
+
+    setTotalAmount(totalPrice);
+  }, [selectedProducts]);
+
+  // ..............
+
   return (
     <div className="App">
-      <Navbar
-        searchResults={searchResults}
-        handleAutoCompleteChange={handleAutoCompleteChange}
-      />
-      <MainListComponent
-        selectedProducts={selectedProducts}
-        setSelectedProducts={setSelectedProducts}
-        handleDecrement={handleDecrement}
-        handleIncrement={handleIncrement}
-        quantity={quantity}
-      />
-      {Object.keys(selectedProducts).length > 0 && <FooterComponent />}
+      <div className="bg-slate-900 h-18 p-2 flex justify-between">
+        {!showOrdersBtn ? (
+          <SearchAutoComplete
+            searchResults={searchResults}
+            handleAutoCompleteChange={handleAutoCompleteChange}
+          />
+        ) : (
+          <h1 className="text-slate-300 text-2xl">Order List</h1>
+        )}
+        {showOrdersBtn ? (
+          <Button
+            color="secondary"
+            onClick={() => setShowOrdersBtn(!showOrdersBtn)}
+          >
+            Back To Home
+          </Button>
+        ) : (
+          <Button
+            onClick={() => setShowOrdersBtn(!showOrdersBtn)}
+            color="primary"
+          >
+            Orders
+          </Button>
+        )}
+      </div>
+      {showOrdersBtn ? (
+        <OrderListPage />
+      ) : (
+        <>
+          <MainListComponent
+            selectedProducts={selectedProducts}
+            setSelectedProducts={setSelectedProducts}
+            handleDecrement={handleDecrement}
+            handleIncrement={handleIncrement}
+            quantity={quantity}
+          />
+
+          {Object.keys(selectedProducts).length > 0 && (
+            <FooterComponent totalAmount={totalAmount} />
+          )}
+        </>
+      )}
     </div>
   );
 };
