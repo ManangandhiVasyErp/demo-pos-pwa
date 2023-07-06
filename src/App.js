@@ -23,6 +23,13 @@ const App = () => {
     products: "++id, title, price, quantity",
   });
 
+  // Initialize the DB for orders.
+  const orderDB = new Dexie("orders");
+
+  orderDB.version(1).stores({
+    orders: "++id"
+  })
+
   // 1. State for adding search results from products API.
   // 2. Selected Product added in the state.
   const [searchResults, setSearchResults] = useState([]);
@@ -34,6 +41,9 @@ const App = () => {
   const [totalAmount, setTotalAmount] = useState(0);
 
   const [showOrdersBtn, setShowOrdersBtn] = useState(false);
+
+  // order list array state.
+  const [orders, setOrders] = useState([]);
 
   // Search Products API call in useEffect.
   const searchProducts = async () => {
@@ -164,6 +174,51 @@ const App = () => {
 
   // ..............
 
+  // Event handler for save orders.
+
+  const handleSaveBtn = async () => {
+    const cartItems = [...selectedProducts];
+
+    const orderData = cartItems.map((item) => ({
+      pid: item.id,
+      price: item.price,
+      quantity: item.quantity,
+      SubTotal: item.price * item.quantity,
+    }));
+
+    const payloadData = [{ totalPrice: totalAmount, OrderItems: orderData }];
+    console.log("payloadData", payloadData);
+   if (navigator.onLine) {
+    try {
+      // const response = await axios.post("", payloadData, {
+    //   headers: {
+    //     Accept: "application/json",
+    //     "Content-Type": "application/json",
+    //     "Access-Control-Allow-Origin": "*",
+    //   },
+    // });
+    // console.log("response", response)
+    // setOrders(response.data);
+
+    await orderDB.orders.add(payloadData)
+    await cartDB.delete().then(() => {
+      console.log("cart Item DB deleted.")
+    })
+
+    alert("Order successfully done.")
+    setSelectedProducts([]);
+    setTotalAmount(0);
+
+    } catch(err) {
+      console.log("dsvf")
+    }
+   } else {
+    console.log("sfbhdfb")
+   }
+  };
+
+  // .............
+
   return (
     <div className="App">
       <div className="bg-slate-900 h-18 p-2 flex justify-between">
@@ -187,12 +242,14 @@ const App = () => {
             onClick={() => setShowOrdersBtn(!showOrdersBtn)}
             color="primary"
           >
-            Orders
+            Orders: 1
           </Button>
         )}
       </div>
       {showOrdersBtn ? (
-        <OrderListPage />
+        <div className="p-4">
+          <OrderListPage orders={orders} />
+          </div>
       ) : (
         <>
           <MainListComponent
@@ -204,7 +261,10 @@ const App = () => {
           />
 
           {Object.keys(selectedProducts).length > 0 && (
-            <FooterComponent totalAmount={totalAmount} />
+            <FooterComponent
+              handleSaveBtn={handleSaveBtn}
+              totalAmount={totalAmount}
+            />
           )}
         </>
       )}
