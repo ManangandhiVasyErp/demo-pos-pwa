@@ -1,13 +1,49 @@
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import { StyledTableCell, StyledTableRow } from '../../utils';
-import { Button } from '@mui/material';
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+import { StyledTableCell, StyledTableRow } from "../../utils";
+import { Button } from "@mui/material";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-const OrderListPage = ({ orders, handleDeleteOrder }) => {
+const OrderListPage = () => {
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      const response = await axios.get(
+        "http://192.168.175.58:8080/api/getorderlist",
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        }
+      );
+      setOrders(response.data || []);
+    };
+    fetchOrders();
+  }, []);
+
+  const handleDeleteOrder = async (id) => {
+    const res = await axios.delete(
+      `http://192.168.175.58:8080/api/deletebyid/${id}`,
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
+    alert(`${res.data}-${id}`);
+    setOrders((prev) => prev.filter((ordr) => ordr.orderId !== id));
+  };
+
   return (
     <TableContainer component={Paper}>
       <Table sx={{ minWidth: 700 }} aria-label="customized table">
@@ -16,24 +52,35 @@ const OrderListPage = ({ orders, handleDeleteOrder }) => {
             <StyledTableCell>Order ID</StyledTableCell>
             <StyledTableCell align="center">Order Price</StyledTableCell>
             <StyledTableCell align="center">Actions</StyledTableCell>
-            </TableRow>
+          </TableRow>
         </TableHead>
         <TableBody>
-          {([1,2] || orders).map((row) => (
-            <StyledTableRow key={row.orderId}>
-              <StyledTableCell component="th" scope="row">
-                {"row.orderId"}
-              </StyledTableCell>
-              <StyledTableCell align="center">{"row.totalPrice"}</StyledTableCell>
-              <StyledTableCell align="center">
-                <Button color="error" onClick={() => handleDeleteOrder(row.orderId)}>Delete</Button>
-              </StyledTableCell>
+          {orders.length <= 0 ? (
+            <h1 className="text-center p-5">No orders Found.</h1>
+          ) : (
+            orders.map((row) => (
+              <StyledTableRow key={row.orderId}>
+                <StyledTableCell component="th" scope="row">
+                  {row.orderId}
+                </StyledTableCell>
+                <StyledTableCell align="center">
+                  $ {row.totalPrice}
+                </StyledTableCell>
+                <StyledTableCell align="center">
+                  <Button
+                    color="error"
+                    onClick={() => handleDeleteOrder(row.orderId)}
+                  >
+                    Delete
+                  </Button>
+                </StyledTableCell>
               </StyledTableRow>
-          ))}
+            ))
+          )}
         </TableBody>
       </Table>
     </TableContainer>
   );
-}
+};
 
-export default OrderListPage
+export default OrderListPage;

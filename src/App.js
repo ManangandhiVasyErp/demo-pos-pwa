@@ -276,13 +276,13 @@ const App = () => {
             onClick={() => setShowOrdersBtn(!showOrdersBtn)}
             color="primary"
           >
-            Orders: 1
+            Orders
           </Button>
         )}
       </div>
       {showOrdersBtn ? (
         <div className="p-4">
-          <OrderListPage orders={[]} />
+          <OrderListPage  />
         </div>
       ) : (
         <>
