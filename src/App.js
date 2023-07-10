@@ -23,6 +23,13 @@ const App = () => {
     products: "++id, title, price, quantity",
   });
 
+  // Initialize the DB for orders.
+  const orderDB = new Dexie("orders");
+
+  orderDB.version(1).stores({
+    orders: "++id",
+  });
+
   // 1. State for adding search results from products API.
   // 2. Selected Product added in the state.
   const [searchResults, setSearchResults] = useState([]);
@@ -34,6 +41,43 @@ const App = () => {
   const [totalAmount, setTotalAmount] = useState(0);
 
   const [showOrdersBtn, setShowOrdersBtn] = useState(false);
+
+  // Orders state and api call.
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get("http://192.168.175.58:8080/api/getorderlist", {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      })
+      .then((response) => {
+        setOrders(response.data || []);
+      });
+  }, []);
+
+  // ............
+
+  // Delete order api call.
+  const handleDeleteOrder = async (id) => {
+    const res = await axios.delete(
+      `http://192.168.175.58:8080/api/deletebyid/${id}`,
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
+    alert(`${res.data}-${id}`);
+    setOrders((prev) => prev.filter((ordr) => ordr.orderId !== id));
+  };
+
+  // ...............
 
   // Search Products API call in useEffect.
   const searchProducts = async () => {
@@ -164,6 +208,88 @@ const App = () => {
 
   // ..............
 
+  // Event handler for save orders.
+
+  const handleSaveBtn = async () => {
+    const cartItems = [...selectedProducts];
+
+    const orderData = cartItems.map((item) => ({
+      pid: item.id,
+      price: item.price,
+      quantity: item.quantity,
+      subTotal: item.price * item.quantity,
+    }));
+
+    const payloadData = [{ totalPrice: totalAmount, orderItems: orderData }];
+    if (navigator.onLine) {
+      try {
+        const response = await axios.post(
+          "http://192.168.175.58:8080/api/addorderlist",
+          payloadData,
+          {
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+          }
+        );
+        console.log("response", response);
+        alert("Order successfully done with online mode.");
+        setSelectedProducts([]);
+        setTotalAmount(0);
+        await cartDB.delete().then(() => {
+          console.log("cartDB deleted Successfully");
+        });
+      } catch (err) {
+        console.log("error to order", err);
+      }
+    } else {
+      alert("offline mode");
+      await orderDB.orders.add(payloadData);
+      alert("Order successfully done with offline mode.");
+      setSelectedProducts([]);
+      setTotalAmount(0);
+
+      // Sync offline orders when app comes online
+      const syncOfflineOrders = async () => {
+        const offlineOrders = await orderDB.orders.toArray();
+
+        alert("back to online");
+
+        if (offlineOrders.length > 0) {
+          try {
+            const response = await axios.post(
+              "http://192.168.175.58:8080/api/addorderlist",
+              offlineOrders[0],
+              {
+                headers: {
+                  Accept: "application/json",
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "*",
+                },
+              }
+            );
+            console.log("Offline orders synced:", response);
+            await orderDB.delete().then(() => {
+              console.log("OrderDB deleted.");
+            });
+            await cartDB.delete().then(() => {
+              console.log("cartDB deleted Successfully");
+            });
+          } catch (err) {
+            console.log("Error syncing offline orders:", err);
+          }
+        }
+      };
+
+      // Call the syncOfflineOrders function when the app comes online
+      window.addEventListener("online", syncOfflineOrders);
+    }
+  };
+
+  // .............
+
   return (
     <div className="App">
       <div className="bg-slate-900 h-18 p-2 flex justify-between">
@@ -192,7 +318,12 @@ const App = () => {
         )}
       </div>
       {showOrdersBtn ? (
-        <OrderListPage />
+        <div className="p-4">
+          <OrderListPage
+            orders={orders}
+            handleDeleteOrder={handleDeleteOrder}
+          />
+        </div>
       ) : (
         <>
           <MainListComponent
@@ -204,7 +335,10 @@ const App = () => {
           />
 
           {Object.keys(selectedProducts).length > 0 && (
-            <FooterComponent totalAmount={totalAmount} />
+            <FooterComponent
+              handleSaveBtn={handleSaveBtn}
+              totalAmount={totalAmount}
+            />
           )}
         </>
       )}
