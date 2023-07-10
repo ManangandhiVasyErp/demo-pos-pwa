@@ -47,7 +47,7 @@ const App = () => {
 
   useEffect(() => {
     axios
-      .get("http://192.168.175.58:8080/api/getorderlist", {
+      .get("https://getitapi.vasyerp.in/api/getorderlist", {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
@@ -55,7 +55,7 @@ const App = () => {
         },
       })
       .then((response) => {
-        setOrders(response.data || []);
+        setOrders(response.data);
       });
   }, []);
 
@@ -64,7 +64,7 @@ const App = () => {
   // Delete order api call.
   const handleDeleteOrder = async (id) => {
     const res = await axios.delete(
-      `http://192.168.175.58:8080/api/deletebyid/${id}`,
+      `https://getitapi.vasyerp.in/api/deletebyid/${id}`,
       {
         headers: {
           Accept: "application/json",
@@ -224,7 +224,7 @@ const App = () => {
     if (navigator.onLine) {
       try {
         const response = await axios.post(
-          "http://192.168.175.58:8080/api/addorderlist",
+          "https://getitapi.vasyerp.in/api/addorderlist",
           payloadData,
           {
             headers: {
@@ -260,7 +260,7 @@ const App = () => {
         if (offlineOrders.length > 0) {
           try {
             const response = await axios.post(
-              "http://192.168.175.58:8080/api/addorderlist",
+              "https://getitapi.vasyerp.in/api/addorderlist",
               offlineOrders[0],
               {
                 headers: {
