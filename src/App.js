@@ -42,6 +42,43 @@ const App = () => {
 
   const [showOrdersBtn, setShowOrdersBtn] = useState(false);
 
+  // Orders state and api call.
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get("http://192.168.175.58:8080/api/getorderlist", {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      })
+      .then((response) => {
+        setOrders(response.data || []);
+      });
+  }, []);
+
+  // ............
+
+  // Delete order api call.
+  const handleDeleteOrder = async (id) => {
+    const res = await axios.delete(
+      `http://192.168.175.58:8080/api/deletebyid/${id}`,
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
+    alert(`${res.data}-${id}`);
+    setOrders((prev) => prev.filter((ordr) => ordr.orderId !== id));
+  };
+
+  // ...............
+
   // Search Products API call in useEffect.
   const searchProducts = async () => {
     try {
@@ -217,9 +254,9 @@ const App = () => {
       // Sync offline orders when app comes online
       const syncOfflineOrders = async () => {
         const offlineOrders = await orderDB.orders.toArray();
-       
+
         alert("back to online");
-     
+
         if (offlineOrders.length > 0) {
           try {
             const response = await axios.post(
@@ -235,7 +272,7 @@ const App = () => {
             );
             console.log("Offline orders synced:", response);
             await orderDB.delete().then(() => {
-              console.log("OrderDB deleted.")
+              console.log("OrderDB deleted.");
             });
             await cartDB.delete().then(() => {
               console.log("cartDB deleted Successfully");
@@ -282,7 +319,10 @@ const App = () => {
       </div>
       {showOrdersBtn ? (
         <div className="p-4">
-          <OrderListPage  />
+          <OrderListPage
+            orders={orders}
+            handleDeleteOrder={handleDeleteOrder}
+          />
         </div>
       ) : (
         <>

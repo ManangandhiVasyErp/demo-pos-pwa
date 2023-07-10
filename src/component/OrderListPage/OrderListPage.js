@@ -6,44 +6,8 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import { StyledTableCell, StyledTableRow } from "../../utils";
 import { Button } from "@mui/material";
-import { useEffect, useState } from "react";
-import axios from "axios";
 
-const OrderListPage = () => {
-  const [orders, setOrders] = useState([]);
-
-  useEffect(() => {
-    const fetchOrders = async () => {
-      const response = await axios.get(
-        "http://192.168.175.58:8080/api/getorderlist",
-        {
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
-      );
-      setOrders(response.data || []);
-    };
-    fetchOrders();
-  }, []);
-
-  const handleDeleteOrder = async (id) => {
-    const res = await axios.delete(
-      `http://192.168.175.58:8080/api/deletebyid/${id}`,
-      {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
-    alert(`${res.data}-${id}`);
-    setOrders((prev) => prev.filter((ordr) => ordr.orderId !== id));
-  };
-
+const OrderListPage = ({ orders, handleDeleteOrder }) => {
   return (
     <TableContainer component={Paper}>
       <Table sx={{ minWidth: 700 }} aria-label="customized table">
