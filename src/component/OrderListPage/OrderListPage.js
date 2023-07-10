@@ -19,28 +19,24 @@ const OrderListPage = ({ orders, handleDeleteOrder }) => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {orders.length <= 0 ? (
-            <h1 className="text-center p-5">No orders Found.</h1>
-          ) : (
-            orders.map((row) => (
-              <StyledTableRow key={row.orderId}>
-                <StyledTableCell component="th" scope="row">
-                  {row.orderId}
-                </StyledTableCell>
-                <StyledTableCell align="center">
-                  $ {row.totalPrice}
-                </StyledTableCell>
-                <StyledTableCell align="center">
-                  <Button
-                    color="error"
-                    onClick={() => handleDeleteOrder(row.orderId)}
-                  >
-                    Delete
-                  </Button>
-                </StyledTableCell>
-              </StyledTableRow>
-            ))
-          )}
+          {orders.map((row) => (
+            <StyledTableRow key={row.orderId}>
+              <StyledTableCell component="th" scope="row">
+                {row.orderId}
+              </StyledTableCell>
+              <StyledTableCell align="center">
+                $ {row.totalPrice}
+              </StyledTableCell>
+              <StyledTableCell align="center">
+                <Button
+                  color="error"
+                  onClick={() => handleDeleteOrder(row.orderId)}
+                >
+                  Delete
+                </Button>
+              </StyledTableCell>
+            </StyledTableRow>
+          ))}
         </TableBody>
       </Table>
     </TableContainer>
