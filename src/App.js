@@ -27,8 +27,8 @@ const App = () => {
   const orderDB = new Dexie("orders");
 
   orderDB.version(1).stores({
-    orders: "++id"
-  })
+    orders: "++id",
+  });
 
   // 1. State for adding search results from products API.
   // 2. Selected Product added in the state.
@@ -41,9 +41,6 @@ const App = () => {
   const [totalAmount, setTotalAmount] = useState(0);
 
   const [showOrdersBtn, setShowOrdersBtn] = useState(false);
-
-  // order list array state.
-  const [orders, setOrders] = useState([]);
 
   // Search Products API call in useEffect.
   const searchProducts = async () => {
@@ -183,38 +180,75 @@ const App = () => {
       pid: item.id,
       price: item.price,
       quantity: item.quantity,
-      SubTotal: item.price * item.quantity,
+      subTotal: item.price * item.quantity,
     }));
 
-    const payloadData = [{ totalPrice: totalAmount, OrderItems: orderData }];
-    console.log("payloadData", payloadData);
-   if (navigator.onLine) {
-    try {
-      // const response = await axios.post("", payloadData, {
-    //   headers: {
-    //     Accept: "application/json",
-    //     "Content-Type": "application/json",
-    //     "Access-Control-Allow-Origin": "*",
-    //   },
-    // });
-    // console.log("response", response)
-    // setOrders(response.data);
+    const payloadData = [{ totalPrice: totalAmount, orderItems: orderData }];
+    if (navigator.onLine) {
+      try {
+        const response = await axios.post(
+          "http://192.168.175.58:8080/api/addorderlist",
+          payloadData,
+          {
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+          }
+        );
+        console.log("response", response);
+        alert("Order successfully done with online mode.");
+        setSelectedProducts([]);
+        setTotalAmount(0);
+        await cartDB.delete().then(() => {
+          console.log("cartDB deleted Successfully");
+        });
+      } catch (err) {
+        console.log("error to order", err);
+      }
+    } else {
+      alert("offline mode");
+      await orderDB.orders.add(payloadData);
+      alert("Order successfully done with offline mode.");
+      setSelectedProducts([]);
+      setTotalAmount(0);
 
-    await orderDB.orders.add(payloadData)
-    await cartDB.delete().then(() => {
-      console.log("cart Item DB deleted.")
-    })
+      // Sync offline orders when app comes online
+      const syncOfflineOrders = async () => {
+        const offlineOrders = await orderDB.orders.toArray();
+       
+        alert("back to online");
+     
+        if (offlineOrders.length > 0) {
+          try {
+            const response = await axios.post(
+              "http://192.168.175.58:8080/api/addorderlist",
+              offlineOrders[0],
+              {
+                headers: {
+                  Accept: "application/json",
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "*",
+                },
+              }
+            );
+            console.log("Offline orders synced:", response);
+            await orderDB.delete().then(() => {
+              console.log("OrderDB deleted.")
+            });
+            await cartDB.delete().then(() => {
+              console.log("cartDB deleted Successfully");
+            });
+          } catch (err) {
+            console.log("Error syncing offline orders:", err);
+          }
+        }
+      };
 
-    alert("Order successfully done.")
-    setSelectedProducts([]);
-    setTotalAmount(0);
-
-    } catch(err) {
-      console.log("dsvf")
+      // Call the syncOfflineOrders function when the app comes online
+      window.addEventListener("online", syncOfflineOrders);
     }
-   } else {
-    console.log("sfbhdfb")
-   }
   };
 
   // .............
@@ -248,8 +282,8 @@ const App = () => {
       </div>
       {showOrdersBtn ? (
         <div className="p-4">
-          <OrderListPage orders={orders} />
-          </div>
+          <OrderListPage orders={[]} />
+        </div>
       ) : (
         <>
           <MainListComponent
