@@ -160,7 +160,7 @@ const App = () => {
 
   const handleIncrement = (row) => {
     const updatedQuantity =
-      quantity && quantity[row.id] ? quantity[row.id] + 1 : 1;
+      quantity && quantity[row.id] ? quantity[row.id] + 1 : 2;
 
     setQuantity((prev) => ({
       ...prev,
