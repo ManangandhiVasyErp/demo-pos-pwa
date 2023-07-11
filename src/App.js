@@ -160,7 +160,7 @@ const App = () => {
 
   const handleIncrement = (row) => {
     const updatedQuantity =
-      quantity && quantity[row.id] ? quantity[row.id] + 1 : 1;
+      quantity && quantity[row.id] ? quantity[row.id] + 1 : 2;
 
     setQuantity((prev) => ({
       ...prev,
@@ -238,6 +238,7 @@ const App = () => {
         alert("Order successfully done with online mode.");
         setSelectedProducts([]);
         setTotalAmount(0);
+        setQuantity(undefined)
         await cartDB.delete().then(() => {
           console.log("cartDB deleted Successfully");
         });
@@ -250,10 +251,16 @@ const App = () => {
       alert("Order successfully done with offline mode.");
       setSelectedProducts([]);
       setTotalAmount(0);
+      setQuantity(undefined)
+      await cartDB.delete().then(() => {
+        console.log("cartDB deleted Successfully in offline mode");
+      });
 
       // Sync offline orders when app comes online
       const syncOfflineOrders = async () => {
         const offlineOrders = await orderDB.orders.toArray();
+
+        const offlinePayloadData = offlineOrders.map((el) => el[0])
 
         alert("back to online");
 
@@ -261,7 +268,7 @@ const App = () => {
           try {
             const response = await axios.post(
               "https://getitapi.vasyerp.in/api/addorderlist",
-              offlineOrders[0],
+              offlinePayloadData,
               {
                 headers: {
                   Accept: "application/json",
