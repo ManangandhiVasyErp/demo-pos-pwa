@@ -246,7 +246,6 @@ const App = () => {
         console.log("error to order", err);
       }
     } else {
-      alert("offline mode");
       await orderDB.orders.add(payloadData);
       alert("Order successfully done with offline mode.");
       setSelectedProducts([]);
