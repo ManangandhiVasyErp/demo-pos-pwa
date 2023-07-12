@@ -171,6 +171,29 @@ const App = () => {
 
   // ..............
 
+  // Print order func.
+
+  const printOrder = () => {
+    const orderHTML = `
+      <div>
+        <h1>Order Details</h1>
+        <ul>
+          ${selectedProducts.map((product) => (
+            `<li>${product.title} - ${product.price} - Quantity: ${product.quantity}</li>`
+          )).join("")}
+        </ul>
+        <p>Total Amount: ${totalAmount}</p>
+      </div>
+    `;
+  
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(orderHTML);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  // ...............
+
   // Event handler for save orders.
 
   const handleSaveBtn = async () => {
@@ -214,9 +237,11 @@ const App = () => {
       setSelectedProducts([]);
       setTotalAmount(0);
       setQuantity(undefined);
+      printOrder()
       await cartDB.delete().then(() => {
         console.log("cartDB deleted Successfully in offline mode");
       });
+
 
       // Sync offline orders when app comes online
       const syncOfflineOrders = async () => {
@@ -255,6 +280,8 @@ const App = () => {
       // Call the syncOfflineOrders function when the app comes online
       window.addEventListener("online", syncOfflineOrders);
     }
+
+ 
   };
 
   // .............
