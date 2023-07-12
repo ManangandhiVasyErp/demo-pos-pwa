@@ -5,6 +5,8 @@ const urlsToCache = [
   "/static/js/bundle.js",
   "/favicon.ico",
   "/manifest.json",
+  "/static/css/main.css",
+  "/static/js/main.js"
 ];
 
 const self = this;
