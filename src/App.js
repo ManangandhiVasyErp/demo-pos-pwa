@@ -42,43 +42,6 @@ const App = () => {
 
   const [showOrdersBtn, setShowOrdersBtn] = useState(false);
 
-  // Orders state and api call.
-  const [orders, setOrders] = useState([]);
-
-  useEffect(() => {
-    axios
-      .get("https://getitapi.vasyerp.in/api/getorderlist", {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      })
-      .then((response) => {
-        setOrders(response.data);
-      });
-  }, []);
-
-  // ............
-
-  // Delete order api call.
-  const handleDeleteOrder = async (id) => {
-    const res = await axios.delete(
-      `https://getitapi.vasyerp.in/api/deletebyid/${id}`,
-      {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
-    alert(`${res.data}-${id}`);
-    setOrders((prev) => prev.filter((ordr) => ordr.orderId !== id));
-  };
-
-  // ...............
-
   // Search Products API call in useEffect.
   const searchProducts = async () => {
     try {
@@ -238,7 +201,7 @@ const App = () => {
         alert("Order successfully done with online mode.");
         setSelectedProducts([]);
         setTotalAmount(0);
-        setQuantity(undefined)
+        setQuantity(undefined);
         await cartDB.delete().then(() => {
           console.log("cartDB deleted Successfully");
         });
@@ -250,7 +213,7 @@ const App = () => {
       alert("Order successfully done with offline mode.");
       setSelectedProducts([]);
       setTotalAmount(0);
-      setQuantity(undefined)
+      setQuantity(undefined);
       await cartDB.delete().then(() => {
         console.log("cartDB deleted Successfully in offline mode");
       });
@@ -259,7 +222,7 @@ const App = () => {
       const syncOfflineOrders = async () => {
         const offlineOrders = await orderDB.orders.toArray();
 
-        const offlinePayloadData = offlineOrders.map((el) => el[0])
+        const offlinePayloadData = offlineOrders.map((el) => el[0]);
 
         alert("back to online");
 
@@ -325,10 +288,7 @@ const App = () => {
       </div>
       {showOrdersBtn ? (
         <div className="p-4">
-          <OrderListPage
-            orders={orders}
-            handleDeleteOrder={handleDeleteOrder}
-          />
+          <OrderListPage />
         </div>
       ) : (
         <>
