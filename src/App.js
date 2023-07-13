@@ -7,6 +7,7 @@ import FooterComponent from "./component/FooterComponent/FooterComponent";
 import { Button } from "@mui/material";
 import SearchAutoComplete from "./component/SearchAutoComplete/SearchAutoComplete";
 import OrderListPage from "./component/OrderListPage/OrderListPage";
+import qz from "qz-tray";
 
 const App = () => {
   // Initialize the dexie for storing the data.
@@ -41,6 +42,8 @@ const App = () => {
   const [totalAmount, setTotalAmount] = useState(0);
 
   const [showOrdersBtn, setShowOrdersBtn] = useState(false);
+
+  const [webSocketConnected, setWebSocketConnected] = useState(false);
 
   // Search Products API call in useEffect.
   const searchProducts = async () => {
@@ -171,6 +174,33 @@ const App = () => {
 
   // ..............
 
+  // useEffect for qz-websocket connection when first time page load...
+
+  useEffect(() => {
+    const connectWebSocket = async () => {
+      try {
+        await qz.websocket.connect().then(() => {
+          alert("web socket connected.");
+        });
+        qz.api.showDebug(true);
+        setWebSocketConnected(true);
+      } catch (err) {
+        console.log("error to connect with websocket", err);
+      }
+    };
+
+    connectWebSocket();
+
+    // // return () => {
+    // //   if (webSocketConnected) {
+    // //     qz.websocket.disconnect();
+    // //     setWebSocketConnected(false);
+    // //   }
+    // };
+  }, []);
+
+  // .................
+
   // Print order func.
 
   const printOrder = () => {
@@ -178,18 +208,46 @@ const App = () => {
       <div>
         <h1>Order Details</h1>
         <ul>
-          ${selectedProducts.map((product) => (
-            `<li>${product.title} - ${product.price} - Quantity: ${product.quantity}</li>`
-          )).join("")}
+          ${selectedProducts
+            .map(
+              (product) =>
+                `<li>${product.title} - ${product.price} - Quantity: ${product.quantity}</li>`
+            )
+            .join("")}
         </ul>
         <p>Total Amount: ${totalAmount}</p>
       </div>
     `;
-  
-    const printWindow = window.open("", "_blank");
-    printWindow.document.write(orderHTML);
-    printWindow.document.close();
-    printWindow.print();
+
+    if (webSocketConnected) {
+      try {
+        qz.api.showDebug(true);
+        qz.printers
+          .getDefault()
+          .then((printer) => {
+            const config = qz.configs.create(printer, {
+              size: { width: 4, height: 6 },
+            });
+            const printData = [
+              {
+                type: 'html',
+                format: 'plain',
+                data: orderHTML,
+              },
+            ];
+            return qz.print(config, printData);
+          })
+          .catch((err) => {
+            console.log("Error printing order:", err);
+          });
+      } catch (error) {
+        console.log("Error printing order:", error);
+      }
+    } else {
+      console.log("WebSocket is not connected. Cannot print order.");
+    }
+
+    // END....
   };
 
   // ...............
@@ -224,6 +282,8 @@ const App = () => {
         alert("Order successfully done with online mode.");
         setSelectedProducts([]);
         setTotalAmount(0);
+
+        printOrder();
         setQuantity(undefined);
         await cartDB.delete().then(() => {
           console.log("cartDB deleted Successfully");
@@ -237,11 +297,10 @@ const App = () => {
       setSelectedProducts([]);
       setTotalAmount(0);
       setQuantity(undefined);
-      printOrder()
+      printOrder();
       await cartDB.delete().then(() => {
         console.log("cartDB deleted Successfully in offline mode");
       });
-
 
       // Sync offline orders when app comes online
       const syncOfflineOrders = async () => {
@@ -280,8 +339,6 @@ const App = () => {
       // Call the syncOfflineOrders function when the app comes online
       window.addEventListener("online", syncOfflineOrders);
     }
-
- 
   };
 
   // .............
