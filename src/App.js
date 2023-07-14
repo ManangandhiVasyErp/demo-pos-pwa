@@ -205,19 +205,33 @@ const App = () => {
 
   const printOrder = () => {
     const orderHTML = `
-      <div>
-        <h1>Order Details</h1>
-        <ul>
+
+    <div id="pos-bill">
+      <h1>Point of Sale Bill</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+        <tbody>
           ${selectedProducts
             .map(
-              (product) =>
-                `<li>${product.title} - ${product.price} - Quantity: ${product.quantity}</li>`
+              (item) =>
+                `<tr key=${item.price + item.title + item.quantity}>
+                  <td>${item.title}</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.price}</td>
+                </tr>`
             )
             .join("")}
-        </ul>
-        <p>Total Amount: ${totalAmount}</p>
-      </div>
-    `;
+        </tbody>
+      </table>
+      <p>Total: ${totalAmount}</p>
+      <p>Thank you for your purchase!</p>
+    </div>`;
 
     if (webSocketConnected) {
       try {
@@ -230,8 +244,8 @@ const App = () => {
             });
             const printData = [
               {
-                type: 'html',
-                format: 'plain',
+                type: "html",
+                format: "plain",
                 data: orderHTML,
               },
             ];
