@@ -155,7 +155,6 @@ const App = () => {
     });
     // eslint-disable-next-line
   }, []);
-
   // ............
 
   // UseEffect for Total Amount - cart Items.
@@ -171,11 +170,9 @@ const App = () => {
 
     setTotalAmount(totalPrice);
   }, [selectedProducts]);
-
   // ..............
 
   // useEffect for qz-websocket connection when first time page load...
-
   useEffect(() => {
     const connectWebSocket = async () => {
       try {
@@ -190,22 +187,12 @@ const App = () => {
     };
 
     connectWebSocket();
-
-    // // return () => {
-    // //   if (webSocketConnected) {
-    // //     qz.websocket.disconnect();
-    // //     setWebSocketConnected(false);
-    // //   }
-    // };
   }, []);
-
   // .................
 
   // Print order func.
-
   const printOrder = () => {
     const orderHTML = `
-
     <div id="pos-bill">
       <h1>Point of Sale Bill</h1>
       <table>
@@ -234,6 +221,7 @@ const App = () => {
     </div>`;
 
     if (webSocketConnected) {
+      // If websocket is connecting then i print it out with use of QZ-Tray in thermal machine.
       try {
         qz.api.showDebug(true);
         qz.printers
@@ -258,7 +246,11 @@ const App = () => {
         console.log("Error printing order:", error);
       }
     } else {
-      console.log("WebSocket is not connected. Cannot print order.");
+      // If websocket is not connecting then i print the PDF.
+      const newWindow = window.open("", "_blank");
+      newWindow.document.write(orderHTML);
+      newWindow.document.close();
+      newWindow.print();
     }
 
     // END....
